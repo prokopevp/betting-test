@@ -72,10 +72,10 @@ async def create_event(event: Event):
 
     await send_rabbitmq(event.model_dump_json())
 
-    return {}
+    return {'msg': 'OK'}
 
 
-@app.get('/event/{event_id}')
+@app.get('/event/{event_id}', response_model=Event)
 async def get_event(event_id: str):
     if event_id in events:
         return events[event_id]
@@ -83,6 +83,6 @@ async def get_event(event_id: str):
     raise HTTPException(status_code=404, detail="Event not found")
 
 
-@app.get('/events')
+@app.get('/events', response_model=list[Event])
 async def get_events():
     return list(e for e in events.values() if time.time() < e.deadline)

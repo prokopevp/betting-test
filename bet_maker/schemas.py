@@ -5,6 +5,10 @@ from typing import Optional
 
 from pydantic import BaseModel, ValidationError, field_validator
 
+class BetOut(BaseModel):
+    bet_id: int
+    state: int
+
 
 class Bet(BaseModel):
     event_id: str

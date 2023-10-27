@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy.exc import NoResultFound
 
 import db
+from schemas import BetOut
 from config import BET_LOG_FILENAME, LINE_PROVIDER_URL
 from db import engine, Session
 from pika_client import PikaClient
@@ -46,6 +47,7 @@ async def init_line_events():
     try:
         res = await http_client.get(LINE_PROVIDER_URL)
         if res.status_code != 200:
+            logger.info('Events not initialised. line-provider is unreachable')
             return
 
         async with Session() as sess:
@@ -53,7 +55,7 @@ async def init_line_events():
                 event = Event(**event_data)
                 await db.update_event(sess, event)
             await sess.commit()
-        logger.info('Events from line-provider initialized...')
+        logger.info('Events from line-provider initialized')
     except ConnectionRefusedError:
         return
 
@@ -81,14 +83,14 @@ async def make_bet(bet: Bet):
             raise HTTPException(status_code=404, detail="Event expired or not found")
 
 
-@app.get('/bets')
+@app.get('/bets', response_model=list[BetOut])
 async def get_all_bets():
     async with Session() as sess:
         bets = await db.get_all_bets(sess)
         return [{'bet_id': b[0], 'state': b[1]} for b in bets]
 
 
-@app.get('/events')
+@app.get('/events', response_model=list[Event])
 async def get_fresh_events():
     async with Session() as sess:
         return [Event.model_validate(m).model_dump() for m in await db.get_fresh_events(sess)]
