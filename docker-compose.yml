@@ -1,0 +1,54 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+    volumes:
+      - ./rabbitmq-vol:/var/lib/rabbitmq/mnesia
+      - ./rabbitmq-conf/rabbitmq-enabled-plugins:/etc/rabbitmq/enabled_plugins
+      - ./rabbitmq-conf/rabbitmq.config:/etc/rabbitmq/rabbitmq.config
+      - ./rabbitmq-conf/rabbitmq-defs.json:/etc/rabbitmq/rabbitmq-defs.json
+    ports:
+      - 15672:15672
+      - 5672:5672
+  postgres:
+    image: postgres:14-alpine
+    env_file:
+      - prod.env
+    environment:
+      POSTGRES_DB: $PG_DB
+      POSTGRES_USER: $PG_USER
+      POSTGRES_PASSWORD: $PG_PASSWORD
+    ports:
+      - "${PG_PORT}:5432"
+    volumes:
+      - ./pg-vol:/var/lib/postgresql
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq
+  line_provider:
+#    build:
+#      dockerfile: line.Dockerfile
+#      context: .
+    image: phdmabuze/betting_line-provider
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs/line_provider:/line-provider/logs
+    depends_on:
+      - rabbitmq
+  bet_maker:
+#    build:
+#      dockerfile: bet.Dockerfile
+#      context: .
+    image: phdmabuze/betting_bet-maker
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./logs/bet_maker:/bet_maker/logs
+    depends_on:
+      - line_provider

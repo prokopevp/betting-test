@@ -1,0 +1,33 @@
+{
+    "rabbit_version" : "3.5.7",
+    "users" : [{
+            "name" : "admin",
+            "password" : "admin",
+            "tags" : "administrator"
+        }
+    ],
+    "vhosts" : [ {
+            "name" : "/"
+        }
+    ],
+    "permissions" : [{
+            "user" : "admin",
+            "vhost" : "/",
+            "configure" : ".*",
+            "write" : ".*",
+            "read" : ".*"
+    }
+    ],
+    "parameters" : [],
+    "policies" : [],
+    "queues" : [{
+            "name" : "events",
+            "vhost" : "/",
+            "durable" : true,
+            "auto_delete" : false,
+            "arguments" : {}
+        }
+    ],
+    "exchanges" : [],
+    "bindings" : []
+}
