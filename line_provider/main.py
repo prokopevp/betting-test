@@ -1,3 +1,4 @@
+import asyncio
 import decimal
 import enum
 import logging
@@ -70,7 +71,7 @@ async def create_event(event: Event):
         for p_name, p_value in event.model_dump(exclude_unset=True).items():
             setattr(events[event.event_id], p_name, p_value)
 
-    await send_rabbitmq(event.model_dump_json())
+    asyncio.create_task(send_rabbitmq(event.model_dump_json()))
 
     return {'msg': 'OK'}
 
